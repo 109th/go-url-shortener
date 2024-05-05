@@ -2,6 +2,7 @@ package tests
 
 import (
 	"github.com/109th/go-url-shortener/internal/app/handlers"
+	"github.com/109th/go-url-shortener/internal/app/handlers/config"
 	"github.com/109th/go-url-shortener/internal/app/server"
 	"github.com/109th/go-url-shortener/internal/app/storage/mock"
 	"github.com/stretchr/testify/assert"
@@ -18,10 +19,15 @@ func TestFHandlePost(t *testing.T) {
 		statusCode int
 		response   string
 	}
+	type configs struct {
+		baseURLPrefix string
+		routePrefix   string
+	}
 	tests := []struct {
 		name        string
 		requestBody string
 		s           *server.Server
+		cfg         configs
 		want        want
 	}{
 		{
@@ -33,14 +39,45 @@ func TestFHandlePost(t *testing.T) {
 				response:   "http://localhost:8080/",
 			},
 		},
+		{
+			name:        "test create redirect url with prefix",
+			requestBody: "https://example.com",
+			s:           server.NewServer(mock.NewMockStorage(map[string]string{})),
+			cfg: configs{
+				baseURLPrefix: "http://localhost:8081/prefix",
+				routePrefix:   "/prefix",
+			},
+			want: want{
+				statusCode: 201,
+				response:   "http://localhost:8081/prefix/",
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ts := httptest.NewServer(handlers.Router(tt.s))
+			// config setup
+			config.RoutePrefix = config.DefaultRoutePrefix
+			if tt.cfg.routePrefix != "" {
+				config.RoutePrefix = tt.cfg.routePrefix
+			}
+
+			config.ServerURLPrefix = config.DefaultServerURL
+			if tt.cfg.baseURLPrefix != "" {
+				config.ServerURLPrefix = tt.cfg.baseURLPrefix
+			}
+
+			// restore default config
+			defer func() {
+				config.RoutePrefix = config.DefaultRoutePrefix
+				config.ServerURLPrefix = config.DefaultServerURL
+			}()
+
+			ts := httptest.NewServer(handlers.Router(tt.s, config.RoutePrefix))
 			defer ts.Close()
 
-			request, err := http.NewRequest(http.MethodPost, ts.URL, strings.NewReader(tt.requestBody))
+			URL := ts.URL + strings.TrimRight(config.RoutePrefix, "/")
+			request, err := http.NewRequest(http.MethodPost, URL, strings.NewReader(tt.requestBody))
 			require.NoError(t, err)
 			result, err := ts.Client().Do(request)
 			require.NoError(t, err)

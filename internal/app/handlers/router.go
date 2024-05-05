@@ -5,11 +5,13 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func Router(s *server.Server) chi.Router {
+func Router(s *server.Server, prefix string) chi.Router {
 	r := chi.NewRouter()
 
-	r.Get("/{id}", HandleGet(s))
-	r.Post("/", HandlePost(s))
+	r.Route(prefix, func(r chi.Router) {
+		r.Get("/{id}", HandleGet(s))
+		r.Post("/", HandlePost(s))
+	})
 
 	return r
 }

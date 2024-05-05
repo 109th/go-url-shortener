@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/109th/go-url-shortener/internal/app/handlers/config"
 	"github.com/109th/go-url-shortener/internal/app/server"
 	"io"
 	"net/http"
@@ -22,6 +23,6 @@ func HandlePost(s *server.Server) http.HandlerFunc {
 		s.SaveURL(uid, string(body))
 
 		res.WriteHeader(http.StatusCreated)
-		res.Write([]byte("http://localhost:8080/" + uid))
+		res.Write([]byte(config.ServerURLPrefix + "/" + uid))
 	}
 }
