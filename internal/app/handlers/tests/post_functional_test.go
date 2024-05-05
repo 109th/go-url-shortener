@@ -1,7 +1,8 @@
-package handlers
+package tests
 
 import (
-	srv "github.com/109th/go-url-shortener/internal/app/server"
+	"github.com/109th/go-url-shortener/internal/app/handlers"
+	"github.com/109th/go-url-shortener/internal/app/server"
 	"github.com/109th/go-url-shortener/internal/app/storage/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -12,7 +13,7 @@ import (
 	"testing"
 )
 
-func TestHandlePost(t *testing.T) {
+func TestFHandlePost(t *testing.T) {
 	type want struct {
 		statusCode int
 		response   string
@@ -20,13 +21,13 @@ func TestHandlePost(t *testing.T) {
 	tests := []struct {
 		name        string
 		requestBody string
-		s           *srv.Server
+		s           *server.Server
 		want        want
 	}{
 		{
 			name:        "test create redirect url",
 			requestBody: "https://example.com",
-			s:           srv.NewServer(mock.NewMockStorage(map[string]string{})),
+			s:           server.NewServer(mock.NewMockStorage(map[string]string{})),
 			want: want{
 				statusCode: 201,
 				response:   "http://localhost:8080/",
@@ -36,12 +37,13 @@ func TestHandlePost(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(tt.requestBody))
-			w := httptest.NewRecorder()
-			h := HandlePost(tt.s)
-			h(w, request)
+			ts := httptest.NewServer(handlers.Router(tt.s))
+			defer ts.Close()
 
-			result := w.Result()
+			request, err := http.NewRequest(http.MethodPost, ts.URL, strings.NewReader(tt.requestBody))
+			require.NoError(t, err)
+			result, err := ts.Client().Do(request)
+			require.NoError(t, err)
 
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 

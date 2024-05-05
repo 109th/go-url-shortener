@@ -2,17 +2,17 @@ package handlers
 
 import (
 	"errors"
-	srv "github.com/109th/go-url-shortener/internal/app/server"
+	"github.com/109th/go-url-shortener/internal/app/server"
+	"github.com/go-chi/chi/v5"
 	"net/http"
-	"strings"
 )
 
-func HandleGet(s *srv.Server) http.HandlerFunc {
+func HandleGet(s *server.Server) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		key := strings.Trim(req.RequestURI, "/")
+		key := chi.URLParam(req, "id")
 		value, err := s.GetURL(key)
 		if err != nil {
-			if errors.Is(err, srv.ErrNotFound) {
+			if errors.Is(err, server.ErrNotFound) {
 				http.Error(res, "400 bad request", http.StatusBadRequest)
 				return
 			}
