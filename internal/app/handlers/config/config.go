@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"net/url"
+	"os"
 	"strings"
 )
 
@@ -23,6 +24,14 @@ func ParseFlags() {
 	flag.StringVar(&ServerURLPrefix, "b", DefaultServerURL, "server base url prefix to use for requests")
 
 	flag.Parse()
+
+	if envSrvAddr := os.Getenv("SERVER_ADDRESS"); envSrvAddr != "" {
+		Addr = envSrvAddr
+	}
+
+	if envBaseURL := os.Getenv("BASE_URL"); envBaseURL != "" {
+		ServerURLPrefix = envBaseURL
+	}
 
 	ServerURLPrefix = strings.TrimSuffix(ServerURLPrefix, "/")
 
