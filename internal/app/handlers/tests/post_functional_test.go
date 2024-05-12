@@ -1,17 +1,18 @@
 package tests
 
 import (
-	"github.com/109th/go-url-shortener/internal/app/handlers"
-	"github.com/109th/go-url-shortener/internal/app/handlers/config"
-	"github.com/109th/go-url-shortener/internal/app/server"
-	"github.com/109th/go-url-shortener/internal/app/storage/mock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/109th/go-url-shortener/internal/app/config"
+	"github.com/109th/go-url-shortener/internal/app/handlers"
+	"github.com/109th/go-url-shortener/internal/app/server"
+	"github.com/109th/go-url-shortener/internal/app/storage/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFHandlePost(t *testing.T) {
@@ -26,14 +27,12 @@ func TestFHandlePost(t *testing.T) {
 	tests := []struct {
 		name        string
 		requestBody string
-		s           *server.Server
 		cfg         configs
 		want        want
 	}{
 		{
 			name:        "test create redirect url",
 			requestBody: "https://example.com",
-			s:           server.NewServer(mock.NewMockStorage(map[string]string{})),
 			want: want{
 				statusCode: 201,
 				response:   "http://localhost:8080/",
@@ -42,7 +41,6 @@ func TestFHandlePost(t *testing.T) {
 		{
 			name:        "test create redirect url with prefix",
 			requestBody: "https://example.com",
-			s:           server.NewServer(mock.NewMockStorage(map[string]string{})),
 			cfg: configs{
 				baseURLPrefix: "http://localhost:8081/prefix",
 				routePrefix:   "/prefix",
@@ -73,7 +71,10 @@ func TestFHandlePost(t *testing.T) {
 				config.ServerURLPrefix = config.DefaultServerURL
 			}()
 
-			ts := httptest.NewServer(handlers.Router(tt.s, config.RoutePrefix))
+			mapStorage := types.NewMapStorage()
+			srv := server.NewServer(mapStorage)
+
+			ts := httptest.NewServer(handlers.Router(srv, config.RoutePrefix))
 			defer ts.Close()
 
 			URL := ts.URL + strings.TrimRight(config.RoutePrefix, "/")

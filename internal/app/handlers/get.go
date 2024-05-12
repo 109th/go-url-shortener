@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/109th/go-url-shortener/internal/app/server"
 	"github.com/go-chi/chi/v5"
-	"net/http"
 )
 
 func HandleGet(s *server.Server) http.HandlerFunc {

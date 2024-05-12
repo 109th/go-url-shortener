@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"net/url"
 	"os"
 	"strings"
@@ -19,17 +20,17 @@ var (
 	RoutePrefix     string
 )
 
-func ParseFlags() {
+func ParseFlags() error {
 	flag.StringVar(&Addr, "a", DefaultAddr, "address and port to run server")
 	flag.StringVar(&ServerURLPrefix, "b", DefaultServerURL, "server base url prefix to use for requests")
 
 	flag.Parse()
 
-	if envSrvAddr := os.Getenv("SERVER_ADDRESS"); envSrvAddr != "" {
+	if envSrvAddr, found := os.LookupEnv("SERVER_ADDRESS"); found {
 		Addr = envSrvAddr
 	}
 
-	if envBaseURL := os.Getenv("BASE_URL"); envBaseURL != "" {
+	if envBaseURL, found := os.LookupEnv("BASE_URL"); found {
 		ServerURLPrefix = envBaseURL
 	}
 
@@ -37,11 +38,13 @@ func ParseFlags() {
 
 	u, err := url.Parse(ServerURLPrefix)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("server base url parse error: %w", err)
 	}
 
 	RoutePrefix = strings.TrimSuffix(u.Path, "/")
 	if RoutePrefix == "" {
 		RoutePrefix = DefaultRoutePrefix
 	}
+
+	return nil
 }

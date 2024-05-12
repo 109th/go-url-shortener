@@ -1,17 +1,18 @@
 package tests
 
 import (
-	"github.com/109th/go-url-shortener/internal/app/handlers"
-	"github.com/109th/go-url-shortener/internal/app/handlers/config"
-	"github.com/109th/go-url-shortener/internal/app/server"
-	"github.com/109th/go-url-shortener/internal/app/storage/mock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/109th/go-url-shortener/internal/app/config"
+	"github.com/109th/go-url-shortener/internal/app/handlers"
+	"github.com/109th/go-url-shortener/internal/app/server"
+	"github.com/109th/go-url-shortener/internal/app/storage/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHandlePost(t *testing.T) {
@@ -26,14 +27,12 @@ func TestHandlePost(t *testing.T) {
 	tests := []struct {
 		name        string
 		requestBody string
-		s           *server.Server
 		cfg         configs
 		want        want
 	}{
 		{
 			name:        "test create redirect url",
 			requestBody: "https://example.com",
-			s:           server.NewServer(mock.NewMockStorage(map[string]string{})),
 			cfg: configs{
 				baseURLPrefix: "http://localhost:8080",
 				routePrefix:   "/",
@@ -64,9 +63,12 @@ func TestHandlePost(t *testing.T) {
 				config.ServerURLPrefix = config.DefaultServerURL
 			}()
 
+			mapStorage := types.NewMapStorage()
+			srv := server.NewServer(mapStorage)
+
 			request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(tt.requestBody))
 			w := httptest.NewRecorder()
-			h := handlers.HandlePost(tt.s)
+			h := handlers.HandlePost(srv)
 			h(w, request)
 
 			result := w.Result()

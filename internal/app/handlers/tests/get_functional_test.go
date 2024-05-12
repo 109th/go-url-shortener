@@ -2,17 +2,18 @@ package tests
 
 import (
 	"fmt"
-	"github.com/109th/go-url-shortener/internal/app/handlers"
-	"github.com/109th/go-url-shortener/internal/app/handlers/config"
-	"github.com/109th/go-url-shortener/internal/app/server"
-	"github.com/109th/go-url-shortener/internal/app/storage/mock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/109th/go-url-shortener/internal/app/config"
+	"github.com/109th/go-url-shortener/internal/app/handlers"
+	"github.com/109th/go-url-shortener/internal/app/server"
+	"github.com/109th/go-url-shortener/internal/app/storage/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFHandleGet(t *testing.T) {
@@ -27,14 +28,14 @@ func TestFHandleGet(t *testing.T) {
 	tests := []struct {
 		name string
 		key  string
-		s    *server.Server
+		data map[string]string
 		cfg  configs
 		want want
 	}{
 		{
 			name: "test get non existing url",
 			key:  "non-existing-key",
-			s:    server.NewServer(mock.NewMockStorage(map[string]string{})),
+			data: nil,
 			want: want{
 				statusCode: 400,
 				response:   "400 bad request\n",
@@ -43,9 +44,9 @@ func TestFHandleGet(t *testing.T) {
 		{
 			name: "test redirect url",
 			key:  "ABC",
-			s: server.NewServer(mock.NewMockStorage(map[string]string{
+			data: map[string]string{
 				"ABC": "https://abc.example.com",
-			})),
+			},
 			want: want{
 				statusCode:     307,
 				locationHeader: "https://abc.example.com",
@@ -54,7 +55,7 @@ func TestFHandleGet(t *testing.T) {
 		{
 			name: "test get non existing url with prefix",
 			key:  "non-existing-key",
-			s:    server.NewServer(mock.NewMockStorage(map[string]string{})),
+			data: nil,
 			cfg: configs{
 				routePrefix: "/prefix",
 			},
@@ -66,9 +67,9 @@ func TestFHandleGet(t *testing.T) {
 		{
 			name: "test redirect url with prefix",
 			key:  "ABC",
-			s: server.NewServer(mock.NewMockStorage(map[string]string{
+			data: map[string]string{
 				"ABC": "https://abc.example.com",
-			})),
+			},
 			cfg: configs{
 				routePrefix: "/prefix",
 			},
@@ -92,7 +93,14 @@ func TestFHandleGet(t *testing.T) {
 				config.RoutePrefix = config.DefaultRoutePrefix
 			}()
 
-			ts := httptest.NewServer(handlers.Router(tt.s, config.RoutePrefix))
+			mapStorage := types.NewMapStorage()
+			srv := server.NewServer(mapStorage)
+			for key, value := range tt.data {
+				err := mapStorage.Save(key, value)
+				require.NoError(t, err)
+			}
+
+			ts := httptest.NewServer(handlers.Router(srv, config.RoutePrefix))
 			ts.Client().CheckRedirect = func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			}
