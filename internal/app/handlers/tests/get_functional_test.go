@@ -1,11 +1,10 @@
 package tests
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
+	"net/url"
 	"testing"
 
 	"github.com/109th/go-url-shortener/internal/app/config"
@@ -83,14 +82,16 @@ func TestFHandleGet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// config setup
-			config.RoutePrefix = config.DefaultRoutePrefix
+			cfg := &config.Config{
+				RoutePrefix: "/",
+			}
 			if tt.cfg.routePrefix != "" {
-				config.RoutePrefix = tt.cfg.routePrefix
+				cfg.RoutePrefix = tt.cfg.routePrefix
 			}
 
 			// restore default config
 			defer func() {
-				config.RoutePrefix = config.DefaultRoutePrefix
+				cfg.RoutePrefix = "/"
 			}()
 
 			mapStorage := types.NewMapStorage()
@@ -100,14 +101,14 @@ func TestFHandleGet(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			ts := httptest.NewServer(handlers.Router(srv, config.RoutePrefix))
+			ts := httptest.NewServer(handlers.Router(srv, cfg))
 			ts.Client().CheckRedirect = func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			}
 			defer ts.Close()
 
-			URL := ts.URL + strings.TrimRight(config.RoutePrefix, "/")
-			request, err := http.NewRequest(http.MethodGet, URL+fmt.Sprintf("/%v", tt.key), nil)
+			URL, _ := url.JoinPath(ts.URL, cfg.RoutePrefix, tt.key)
+			request, err := http.NewRequest(http.MethodGet, URL, http.NoBody)
 			require.NoError(t, err)
 			result, err := ts.Client().Do(request)
 			require.NoError(t, err)

@@ -59,7 +59,7 @@ func TestHandleGet(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/%v", tt.key), nil)
+			request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/%v", tt.key), http.NoBody)
 
 			// mock request with chi context
 			rctx := chi.NewRouteContext()

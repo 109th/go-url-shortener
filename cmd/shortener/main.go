@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -13,16 +12,16 @@ import (
 )
 
 func main() {
-	err := config.ParseFlags()
+	cfg, err := config.ParseFlags()
 	if err != nil {
-		log.Fatalln(fmt.Errorf("flags parse error: %w", err))
+		log.Fatalf("flags parse error: %v", err)
 	}
 
 	mapStorage := types.NewMapStorage()
 	s := server.NewServer(mapStorage)
 
-	err = http.ListenAndServe(config.Addr, handlers.Router(s, config.RoutePrefix))
+	err = http.ListenAndServe(cfg.Addr, handlers.Router(s, cfg))
 	if !errors.Is(err, http.ErrServerClosed) {
-		log.Fatalln(fmt.Errorf("http server error: %w", err))
+		log.Fatalf("http server error: %v", err)
 	}
 }

@@ -47,20 +47,22 @@ func TestHandlePost(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// config setup
-			config.RoutePrefix = config.DefaultRoutePrefix
+			cfg := &config.Config{
+				RoutePrefix:     "/",
+				ServerURLPrefix: "http://localhost:8080",
+			}
 			if tt.cfg.routePrefix != "" {
-				config.RoutePrefix = tt.cfg.routePrefix
+				cfg.RoutePrefix = tt.cfg.routePrefix
 			}
 
-			config.ServerURLPrefix = config.DefaultServerURL
 			if tt.cfg.baseURLPrefix != "" {
-				config.ServerURLPrefix = tt.cfg.baseURLPrefix
+				cfg.ServerURLPrefix = tt.cfg.baseURLPrefix
 			}
 
 			// restore default config
 			defer func() {
-				config.RoutePrefix = config.DefaultRoutePrefix
-				config.ServerURLPrefix = config.DefaultServerURL
+				cfg.RoutePrefix = "/"
+				cfg.ServerURLPrefix = "http://localhost:8080"
 			}()
 
 			mapStorage := types.NewMapStorage()
@@ -68,7 +70,7 @@ func TestHandlePost(t *testing.T) {
 
 			request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(tt.requestBody))
 			w := httptest.NewRecorder()
-			h := handlers.HandlePost(srv)
+			h := handlers.HandlePost(srv, cfg)
 			h(w, request)
 
 			result := w.Result()

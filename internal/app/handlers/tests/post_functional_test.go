@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -55,29 +56,31 @@ func TestFHandlePost(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// config setup
-			config.RoutePrefix = config.DefaultRoutePrefix
+			cfg := &config.Config{
+				RoutePrefix:     "/",
+				ServerURLPrefix: "http://localhost:8080",
+			}
 			if tt.cfg.routePrefix != "" {
-				config.RoutePrefix = tt.cfg.routePrefix
+				cfg.RoutePrefix = tt.cfg.routePrefix
 			}
 
-			config.ServerURLPrefix = config.DefaultServerURL
 			if tt.cfg.baseURLPrefix != "" {
-				config.ServerURLPrefix = tt.cfg.baseURLPrefix
+				cfg.ServerURLPrefix = tt.cfg.baseURLPrefix
 			}
 
 			// restore default config
 			defer func() {
-				config.RoutePrefix = config.DefaultRoutePrefix
-				config.ServerURLPrefix = config.DefaultServerURL
+				cfg.RoutePrefix = "/"
+				cfg.ServerURLPrefix = "http://localhost:8080"
 			}()
 
 			mapStorage := types.NewMapStorage()
 			srv := server.NewServer(mapStorage)
 
-			ts := httptest.NewServer(handlers.Router(srv, config.RoutePrefix))
+			ts := httptest.NewServer(handlers.Router(srv, cfg))
 			defer ts.Close()
 
-			URL := ts.URL + strings.TrimRight(config.RoutePrefix, "/")
+			URL, _ := url.JoinPath(ts.URL, cfg.RoutePrefix)
 			request, err := http.NewRequest(http.MethodPost, URL, strings.NewReader(tt.requestBody))
 			require.NoError(t, err)
 			result, err := ts.Client().Do(request)

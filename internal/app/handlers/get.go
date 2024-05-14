@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/109th/go-url-shortener/internal/app/server"
@@ -18,6 +20,7 @@ func HandleGet(s *server.Server) http.HandlerFunc {
 				return
 			}
 
+			log.Println(fmt.Errorf("get URL error: %w", err))
 			http.Error(res, "500 internal server error", http.StatusInternalServerError)
 			return
 		}
