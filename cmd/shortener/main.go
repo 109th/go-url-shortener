@@ -9,6 +9,7 @@ import (
 	"github.com/109th/go-url-shortener/internal/app/handlers"
 	"github.com/109th/go-url-shortener/internal/app/server"
 	"github.com/109th/go-url-shortener/internal/app/storage/types"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -20,8 +21,14 @@ func main() {
 	mapStorage := types.NewMapStorage()
 	s := server.NewServer(mapStorage)
 
-	err = http.ListenAndServe(cfg.Addr, handlers.Router(s, cfg))
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatalf("can't initialize zap logger: %v", err)
+	}
+	defer func() { _ = logger.Sync() }()
+
+	err = http.ListenAndServe(cfg.Addr, handlers.NewRouter(s, cfg, logger))
 	if !errors.Is(err, http.ErrServerClosed) {
-		log.Fatalf("http server error: %v", err)
+		log.Panicf("http server error: %v", err)
 	}
 }
