@@ -23,7 +23,7 @@ func (r *loggingResponseWriter) Write(b []byte) (int, error) {
 	size, err := r.ResponseWriter.Write(b)
 	r.responseData.size += size
 
-	return size, err //nolint:wrapcheck //proxy struct
+	return size, err //nolint:wrapcheck // decorator
 }
 
 func (r *loggingResponseWriter) WriteHeader(statusCode int) {

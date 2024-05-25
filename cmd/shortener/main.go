@@ -29,6 +29,7 @@ func main() {
 
 	err = http.ListenAndServe(cfg.Addr, handlers.NewRouter(s, cfg, logger))
 	if !errors.Is(err, http.ErrServerClosed) {
-		log.Panicf("http server error: %v", err)
+		_ = logger.Sync()
+		log.Fatalf("http server error: %v", err) //nolint:gocritic // sync logger
 	}
 }
