@@ -2,15 +2,13 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/109th/go-url-shortener/internal/app/server"
 	"github.com/go-chi/chi/v5"
 )
 
-func HandleGet(s *server.Server) http.HandlerFunc {
+func HandleGet(s Server) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		key := chi.URLParam(req, "id")
 		value, err := s.GetURL(key)
@@ -20,8 +18,7 @@ func HandleGet(s *server.Server) http.HandlerFunc {
 				return
 			}
 
-			log.Println(fmt.Errorf("get URL error: %w", err))
-			http.Error(res, "500 internal server error", http.StatusInternalServerError)
+			handleGetURLError(res, err)
 			return
 		}
 
