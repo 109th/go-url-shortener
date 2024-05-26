@@ -15,6 +15,7 @@ type Server interface {
 func NewRouter(s Server, cfg *config.Config, logger *zap.Logger) chi.Router {
 	r := chi.NewRouter()
 	r.Use(middleware.NewLogger(logger))
+	r.Use(middleware.NewGzipCompression(logger))
 
 	r.Route(cfg.RoutePrefix, func(r chi.Router) {
 		r.Get("/{id}", HandleGet(s))

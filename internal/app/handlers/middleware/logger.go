@@ -32,7 +32,7 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 }
 
 func NewLogger(logger *zap.Logger) func(http.Handler) http.Handler {
-	sugar := logger.Sugar()
+	slog := logger.Sugar()
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +49,7 @@ func NewLogger(logger *zap.Logger) func(http.Handler) http.Handler {
 
 			duration := time.Since(start)
 
-			sugar.Infoln(
+			slog.Infoln(
 				"method", method,
 				"uri", uri,
 				"duration", duration,

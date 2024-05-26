@@ -2,6 +2,7 @@ package tests
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -97,12 +98,14 @@ func TestHandleShorten(t *testing.T) {
 			_ = jsonEncoder.Encode(tt.request)
 
 			request, _ := http.NewRequest(http.MethodPost, URL, bytes.NewReader(buf.Bytes()))
+			request.Header.Set("Accept-Encoding", "gzip")
 			result, _ := ts.Client().Do(request)
 
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 			assert.Equal(t, "application/json", result.Header.Get("Content-Type"))
 
-			resBody, _ := io.ReadAll(result.Body)
+			cr, _ := gzip.NewReader(result.Body)
+			resBody, _ := io.ReadAll(cr)
 			_ = result.Body.Close()
 
 			buf.Reset()
