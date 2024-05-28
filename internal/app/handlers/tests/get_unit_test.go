@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/109th/go-url-shortener/internal/app/handlers"
@@ -52,7 +53,11 @@ func TestHandleGet(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mapStorage := types.NewMapStorage()
+			tmpFile, _ := os.CreateTemp(os.TempDir(), "go-url-shortener-test_")
+			defer os.Remove(tmpFile.Name())
+			defer tmpFile.Close()
+			mapStorage, err := types.NewMapStorage(tmpFile)
+			require.NoError(t, err)
 			srv := server.NewServer(mapStorage)
 			for key, value := range tt.data {
 				err := mapStorage.Save(key, value)
