@@ -26,7 +26,7 @@ func main() {
 	}
 	defer func() { _ = file.Close() }()
 
-	mapStorage, err := types.NewMapStorage(file)
+	mapStorage, err := types.NewFileStorage(file)
 	if err != nil {
 		_ = file.Close()
 		log.Fatalf("storage initilization error: %v", err) //nolint:gocritic // close file
@@ -39,9 +39,10 @@ func main() {
 		_ = file.Close()
 		log.Fatalf("can't initialize zap logger: %v", err)
 	}
+	zap.ReplaceGlobals(logger)
 	defer func() { _ = logger.Sync() }()
 
-	err = http.ListenAndServe(cfg.Addr, handlers.NewRouter(s, cfg, logger))
+	err = http.ListenAndServe(cfg.Addr, handlers.NewRouter(s, cfg))
 	if !errors.Is(err, http.ErrServerClosed) {
 		_ = file.Close()
 		_ = logger.Sync()

@@ -14,7 +14,6 @@ import (
 	"github.com/109th/go-url-shortener/internal/app/storage/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 )
 
 func TestFHandleGet(t *testing.T) {
@@ -81,8 +80,6 @@ func TestFHandleGet(t *testing.T) {
 		},
 	}
 
-	logger, _ := zap.NewDevelopment()
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// config setup
@@ -101,7 +98,7 @@ func TestFHandleGet(t *testing.T) {
 			tmpFile, _ := os.CreateTemp(os.TempDir(), "go-url-shortener-test_")
 			defer os.Remove(tmpFile.Name())
 			defer tmpFile.Close()
-			mapStorage, err := types.NewMapStorage(tmpFile)
+			mapStorage, err := types.NewFileStorage(tmpFile)
 			require.NoError(t, err)
 			srv := server.NewServer(mapStorage)
 			for key, value := range tt.data {
@@ -109,7 +106,7 @@ func TestFHandleGet(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			ts := httptest.NewServer(handlers.NewRouter(srv, cfg, logger))
+			ts := httptest.NewServer(handlers.NewRouter(srv, cfg))
 			ts.Client().CheckRedirect = func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			}

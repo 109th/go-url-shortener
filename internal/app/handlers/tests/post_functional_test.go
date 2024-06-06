@@ -15,7 +15,6 @@ import (
 	"github.com/109th/go-url-shortener/internal/app/storage/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 )
 
 func TestFHandlePost(t *testing.T) {
@@ -55,8 +54,6 @@ func TestFHandlePost(t *testing.T) {
 		},
 	}
 
-	logger, _ := zap.NewDevelopment()
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// config setup
@@ -81,11 +78,11 @@ func TestFHandlePost(t *testing.T) {
 			tmpFile, _ := os.CreateTemp(os.TempDir(), "go-url-shortener-test_")
 			defer os.Remove(tmpFile.Name())
 			defer tmpFile.Close()
-			mapStorage, err := types.NewMapStorage(tmpFile)
+			mapStorage, err := types.NewFileStorage(tmpFile)
 			require.NoError(t, err)
 			srv := server.NewServer(mapStorage)
 
-			ts := httptest.NewServer(handlers.NewRouter(srv, cfg, logger))
+			ts := httptest.NewServer(handlers.NewRouter(srv, cfg))
 			defer ts.Close()
 
 			URL, _ := url.JoinPath(ts.URL, cfg.RoutePrefix)

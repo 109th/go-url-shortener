@@ -4,7 +4,6 @@ import (
 	"github.com/109th/go-url-shortener/internal/app/config"
 	"github.com/109th/go-url-shortener/internal/app/handlers/middleware"
 	"github.com/go-chi/chi/v5"
-	"go.uber.org/zap"
 )
 
 type Server interface {
@@ -12,10 +11,10 @@ type Server interface {
 	SaveURL(url string) (string, error)
 }
 
-func NewRouter(s Server, cfg *config.Config, logger *zap.Logger) chi.Router {
+func NewRouter(s Server, cfg *config.Config) chi.Router {
 	r := chi.NewRouter()
-	r.Use(middleware.NewLogger(logger))
-	r.Use(middleware.NewGzipCompression(logger))
+	r.Use(middleware.NewLogger())
+	r.Use(middleware.NewGzipCompression())
 
 	r.Route(cfg.RoutePrefix, func(r chi.Router) {
 		r.Get("/{id}", HandleGet(s))

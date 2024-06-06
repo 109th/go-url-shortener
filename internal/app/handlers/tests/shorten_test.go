@@ -14,7 +14,6 @@ import (
 	"github.com/109th/go-url-shortener/internal/app/handlers"
 	"github.com/109th/go-url-shortener/internal/app/handlers/internal/mockery"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 )
 
 func TestHandleShorten(t *testing.T) {
@@ -62,8 +61,6 @@ func TestHandleShorten(t *testing.T) {
 		},
 	}
 
-	logger, _ := zap.NewDevelopment()
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// config setup
@@ -88,7 +85,7 @@ func TestHandleShorten(t *testing.T) {
 			srv := mockery.NewMockServer(t)
 			srv.EXPECT().SaveURL(tt.request.URL).Return("mock-generated-id", nil).Once()
 
-			ts := httptest.NewServer(handlers.NewRouter(srv, cfg, logger))
+			ts := httptest.NewServer(handlers.NewRouter(srv, cfg))
 			defer ts.Close()
 
 			URL, _ := url.JoinPath(ts.URL, cfg.RoutePrefix, "api/shorten")

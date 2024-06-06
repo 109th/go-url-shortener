@@ -4,7 +4,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 
@@ -66,11 +65,7 @@ func TestHandlePost(t *testing.T) {
 				cfg.ServerURLPrefix = "http://localhost:8080"
 			}()
 
-			tmpFile, _ := os.CreateTemp(os.TempDir(), "go-url-shortener-test_")
-			defer os.Remove(tmpFile.Name())
-			defer tmpFile.Close()
-			mapStorage, err := types.NewMapStorage(tmpFile)
-			require.NoError(t, err)
+			mapStorage := types.NewMapStorage()
 			srv := server.NewServer(mapStorage)
 
 			request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(tt.requestBody))

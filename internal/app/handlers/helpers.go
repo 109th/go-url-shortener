@@ -1,17 +1,23 @@
 package handlers
 
 import (
-	"fmt"
-	"log"
 	"net/http"
+
+	"go.uber.org/zap"
 )
 
 func handleSaveURLError(res http.ResponseWriter, err error) {
-	log.Println(fmt.Errorf("save URL error: %w", err))
+	zap.S().Errorw(
+		"save URL error: %w",
+		"error", err,
+	)
 	http.Error(res, "500 internal server error", http.StatusInternalServerError)
 }
 
 func handleGetURLError(res http.ResponseWriter, err error) {
-	log.Println(fmt.Errorf("get URL error: %w", err))
+	zap.S().Errorw(
+		"get URL error",
+		"error", err,
+	)
 	http.Error(res, "500 internal server error", http.StatusInternalServerError)
 }

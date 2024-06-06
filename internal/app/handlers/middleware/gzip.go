@@ -56,9 +56,7 @@ func (w *gzipResponseWriter) isCompatible() bool {
 	return compatibleTypes[contentType]
 }
 
-func NewGzipCompression(logger *zap.Logger) func(http.Handler) http.Handler {
-	slog := logger.Sugar()
-
+func NewGzipCompression() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ow := w
@@ -67,11 +65,17 @@ func NewGzipCompression(logger *zap.Logger) func(http.Handler) http.Handler {
 			if strings.Contains(contentEncoding, "gzip") {
 				reader, err := gzip.NewReader(r.Body)
 				if err != nil {
-					slog.Errorw("failed to decompress request", "error", err)
+					zap.S().Errorw("failed to decompress request", "error", err)
 					http.Error(w, "gzip middleware error", http.StatusInternalServerError)
 
 					return
 				}
+				defer func() {
+					err := reader.Close()
+					if err != nil {
+						zap.S().Errorw("failed to close gzip reader", "error", err)
+					}
+				}()
 
 				r.Body = reader
 			}

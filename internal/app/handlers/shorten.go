@@ -2,8 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 
@@ -22,7 +20,6 @@ func HandleShorten(s Server, cfg *config.Config) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		var body ShortenRequest
 		if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
-			log.Println(fmt.Errorf("decode request body error: %w", err))
 			http.Error(res, "400 bad request", http.StatusBadRequest)
 		}
 
