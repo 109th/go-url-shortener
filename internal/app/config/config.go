@@ -13,6 +13,7 @@ const (
 	defaultServerURL       = "http://localhost:8080"
 	defaultRoutePrefix     = "/"
 	defaultFileStoragePath = "/tmp/short-url-db.json"
+	defaultStorageType     = "file"
 )
 
 type Config struct {
@@ -20,6 +21,7 @@ type Config struct {
 	ServerURLPrefix string
 	RoutePrefix     string
 	FileStoragePath string
+	StorageType     string
 }
 
 func ParseFlags() (*Config, error) {
@@ -27,11 +29,13 @@ func ParseFlags() (*Config, error) {
 		Addr:            defaultAddr,
 		ServerURLPrefix: defaultServerURL,
 		RoutePrefix:     defaultRoutePrefix,
+		StorageType:     defaultStorageType,
 	}
 
 	flag.StringVar(&cfg.Addr, "a", defaultAddr, "address and port to run server")
 	flag.StringVar(&cfg.ServerURLPrefix, "b", defaultServerURL, "server base url prefix to use for requests")
 	flag.StringVar(&cfg.FileStoragePath, "f", defaultFileStoragePath, "path to the data store file")
+	flag.StringVar(&cfg.StorageType, "s", defaultStorageType, "storage type, possible values: memory, file")
 
 	flag.Parse()
 
@@ -57,6 +61,10 @@ func ParseFlags() (*Config, error) {
 
 	if envFileStoragePath, ok := os.LookupEnv("FILE_STORAGE_PATH"); ok {
 		cfg.FileStoragePath = envFileStoragePath
+	}
+
+	if envStorageType, ok := os.LookupEnv("STORAGE_TYPE"); ok {
+		cfg.StorageType = envStorageType
 	}
 
 	return cfg, nil

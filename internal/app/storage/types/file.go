@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/109th/go-url-shortener/internal/app/storage"
+	"github.com/109th/go-url-shortener/internal/app/storage/errors"
 )
 
 type FileStorage struct {
@@ -39,7 +39,7 @@ func (s *FileStorage) Get(key string) string {
 
 func (s *FileStorage) Save(key string, value string) error {
 	if s.MapStorage.Get(key) != "" {
-		return storage.ErrKeyExists
+		return errors.ErrKeyExists
 	}
 
 	err := s.MapStorage.Save(key, value)
@@ -57,6 +57,15 @@ func (s *FileStorage) Save(key string, value string) error {
 	_, err = s.file.Write(data)
 	if err != nil {
 		return fmt.Errorf("write to file error: %w", err)
+	}
+
+	return nil
+}
+
+func (s *FileStorage) Close() error {
+	err := s.file.Close()
+	if err != nil {
+		return fmt.Errorf("close file storage error: %w", err)
 	}
 
 	return nil

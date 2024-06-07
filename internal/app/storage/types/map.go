@@ -1,6 +1,8 @@
 package types
 
-import "github.com/109th/go-url-shortener/internal/app/storage"
+import (
+	"github.com/109th/go-url-shortener/internal/app/storage/errors"
+)
 
 type MapStorage struct {
 	storage map[string]string
@@ -18,8 +20,12 @@ func (s *MapStorage) Get(key string) string {
 
 func (s *MapStorage) Save(key string, value string) error {
 	if s.storage[key] != "" {
-		return storage.ErrKeyExists
+		return errors.ErrKeyExists
 	}
 	s.storage[key] = value
+	return nil
+}
+
+func (s *MapStorage) Close() error {
 	return nil
 }
