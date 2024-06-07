@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/109th/go-url-shortener/internal/app/storage"
+	storageErrors "github.com/109th/go-url-shortener/internal/app/storage/errors"
 )
 
 const RandomBytesCount = 8
@@ -14,15 +15,10 @@ var (
 )
 
 type Server struct {
-	storage Storage
+	storage storage.Storage
 }
 
-type Storage interface {
-	Get(key string) string
-	Save(key, value string) error
-}
-
-func NewServer(s Storage) *Server {
+func NewServer(s storage.Storage) *Server {
 	return &Server{
 		storage: s,
 	}
@@ -49,7 +45,7 @@ func (s *Server) SaveURL(url string) (string, error) {
 		}
 
 		err = s.storage.Save(uid, url)
-		if errors.Is(err, storage.ErrKeyExists) {
+		if errors.Is(err, storageErrors.ErrKeyExists) {
 			continue
 		}
 

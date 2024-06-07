@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 
 	"github.com/109th/go-url-shortener/internal/app/config"
@@ -94,14 +95,18 @@ func TestFHandleGet(t *testing.T) {
 				cfg.RoutePrefix = "/"
 			}()
 
-			mapStorage := types.NewMapStorage()
+			tmpFile, _ := os.CreateTemp(os.TempDir(), "go-url-shortener-test_")
+			defer os.Remove(tmpFile.Name())
+			defer tmpFile.Close()
+			mapStorage, err := types.NewFileStorage(tmpFile)
+			require.NoError(t, err)
 			srv := server.NewServer(mapStorage)
 			for key, value := range tt.data {
 				err := mapStorage.Save(key, value)
 				require.NoError(t, err)
 			}
 
-			ts := httptest.NewServer(handlers.Router(srv, cfg))
+			ts := httptest.NewServer(handlers.NewRouter(srv, cfg))
 			ts.Client().CheckRedirect = func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			}

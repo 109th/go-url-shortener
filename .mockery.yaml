@@ -1,0 +1,10 @@
+with-expecter: true
+filename: "mock_{{.InterfaceName}}.go"
+mockname: "Mock{{.InterfaceName}}"
+outpkg: "mockery"
+packages:
+  github.com/109th/go-url-shortener/internal/app/handlers:
+    interfaces:
+      Server:
+        config:
+          dir: "{{.InterfaceDir}}/internal/mockery"
